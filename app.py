@@ -1,11 +1,12 @@
 
 import streamlit as st
 import streamlit.components.v1 as components
+import random
 import json
 
-# --------------------------------
-# 1. 게임 기본 설정 (리스트)
-# --------------------------------
+# =====================================
+# 1. 기본 설정
+# =====================================
 
 st.set_page_config(
     page_title="RETRO STRIKE",
@@ -13,23 +14,40 @@ st.set_page_config(
     layout="wide"
 )
 
+st.markdown("""
+<style>
+.stApp {
+    background-color: #101014;
+    color: white;
+}
+h1, h2, h3, p, label {
+    color: white !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+
+# =====================================
+# 2. 게임 데이터 (리스트)
+# =====================================
+
 mission_plan = [
-    {"name": "MISSION 1 - TRAINING", "enemy_count": 2},
-    {"name": "MISSION 2 - DARK HALL", "enemy_count": 3},
-    {"name": "MISSION 3 - LAST BATTLE", "enemy_count": 4}
+    {"name": "MISSION 1 : TRAINING", "enemy_count": 2},
+    {"name": "MISSION 2 : DARK HALL", "enemy_count": 3},
+    {"name": "MISSION 3 : LAST BATTLE", "enemy_count": 4}
 ]
 
-# 적의 위치
-enemy_positions = [
+spawn_positions = [
     [7.5, 1.5],
     [7.5, 6.5],
     [5.5, 3.5],
     [2.5, 6.5]
 ]
 
-# --------------------------------
-# 2. 함수
-# --------------------------------
+
+# =====================================
+# 3. 미션 생성 함수
+# =====================================
 
 def build_missions():
 
@@ -44,13 +62,19 @@ def build_missions():
         else:
             difficulty = "HARD"
 
+        # 적의 위치를 무작위로 선택
+        selected_positions = random.sample(
+            spawn_positions,
+            mission["enemy_count"]
+        )
+
         enemies = []
 
-        for i in range(mission["enemy_count"]):
+        for position in selected_positions:
 
             enemies.append({
-                "x": enemy_positions[i][0],
-                "y": enemy_positions[i][1],
+                "x": position[0],
+                "y": position[1],
                 "hp": 1
             })
 
@@ -63,82 +87,78 @@ def build_missions():
     return game_missions
 
 
-# --------------------------------
-# 3. 웹 화면
-# --------------------------------
-
-st.markdown("""
-<style>
-.stApp {
-    background-color: #101014;
-    color: white;
-}
-h1, h2, h3, p {
-    color: white;
-}
-</style>
-""", unsafe_allow_html=True)
+# =====================================
+# 4. 게임 제목 및 안내
+# =====================================
 
 st.title("🎮 RETRO STRIKE")
 st.subheader("LAST MISSION")
-st.caption("RETRO FPS ARCADE GAME")
 
-st.write(
-    "어두운 기지를 탐험하고 로봇 적들을 상대하세요. "
-    "모든 미션을 완료하면 게임에서 승리합니다."
-)
+st.markdown("""
+**RETRO FPS ARCADE GAME**
 
-st.info(
-    "WASD: 이동 | 마우스: 시점 회전 | 클릭: 에너지 공격"
-)
+어두운 기지에 침입한 로봇들을 상대하세요.
+모든 적을 처치하고 최종 미션을 완료하세요!
+""")
 
-# --------------------------------
-# 4. 미션 데이터 생성
-# --------------------------------
+st.info("""
+↑ ↓ : 전진 / 후진
+| ← → : 시야 회전
+| W A S D : 이동
+| 마우스 클릭 : 공격
+""")
+
+# =====================================
+# 5. 게임 데이터 전달
+# =====================================
 
 missions = build_missions()
-
-# --------------------------------
-# 5. 게임 화면 구현
-# --------------------------------
 
 game_html = r"""
 <!DOCTYPE html>
 <html>
 <head>
+
+<meta charset="UTF-8">
+
 <style>
+
 body {
     margin: 0;
+    padding: 0;
     background: #090909;
     color: white;
     font-family: monospace;
-    overflow: hidden;
-}
-
-canvas {
-    width: 100%;
-    height: auto;
-    display: block;
-    background: black;
-    cursor: crosshair;
-    border: 2px solid #555;
 }
 
 .info {
     display: flex;
-    justify-content: space-between;
-    padding: 10px;
-    font-size: 15px;
+    justify-content: space-around;
+    padding: 12px;
+    background: #151515;
     color: #00ff99;
-    background: #111;
+    font-size: 16px;
+    border: 1px solid #444;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: black;
+    border: 2px solid #555;
+    cursor: crosshair;
+    outline: none;
 }
 
 #message {
     text-align: center;
     color: #ffcc00;
-    font-size: 17px;
-    padding: 8px;
+    font-size: 18px;
+    padding: 12px;
+    background: #151515;
 }
+
 </style>
 </head>
 
@@ -150,7 +170,7 @@ canvas {
     <span id="score">SCORE: 0</span>
 </div>
 
-<canvas id="game" width="960" height="540"></canvas>
+<canvas id="game" width="960" height="540" tabindex="0"></canvas>
 
 <div id="message">
     CLICK TO START
@@ -158,9 +178,9 @@ canvas {
 
 <script>
 
-// --------------------------------
-// 게임 데이터
-// --------------------------------
+// =====================================
+// 1. 게임 기본 데이터
+// =====================================
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -183,6 +203,7 @@ const MAP = [
 const MISSIONS = __MISSION_DATA__;
 
 let missionIndex = 0;
+
 let player = {
     x: 1.5,
     y: 1.5,
@@ -191,20 +212,25 @@ let player = {
 };
 
 let enemies = [];
+
 let score = 0;
+
 let keys = {};
-let lastShot = 0;
-let clearTime = 0;
+
+let started = false;
 let gameOver = false;
 let gameWon = false;
-let started = false;
+
+let lastShot = 0;
+let clearTime = 0;
 
 const FOV = Math.PI / 3;
 const depthBuffer = new Array(W).fill(10);
 
-// --------------------------------
-// 미션 시작 함수
-// --------------------------------
+
+// =====================================
+// 2. 미션 시작 함수
+// =====================================
 
 function startMission() {
 
@@ -213,23 +239,49 @@ function startMission() {
     player.angle = 0;
 
     enemies = MISSIONS[missionIndex].enemies.map(
-        e => ({
-            x: e.x,
-            y: e.y,
-            hp: e.hp,
+        enemy => ({
+            x: enemy.x,
+            y: enemy.y,
+            hp: enemy.hp,
             alive: true
         })
     );
 
+    clearTime = 0;
+
     document.getElementById("mission").innerText =
         MISSIONS[missionIndex].name;
-
-    clearTime = 0;
 }
 
-// --------------------------------
-// 벽 충돌 확인 함수
-// --------------------------------
+
+// =====================================
+// 3. 게임 초기화 함수
+// =====================================
+
+function resetGame() {
+
+    missionIndex = 0;
+
+    player.hp = 100;
+    player.x = 1.5;
+    player.y = 1.5;
+    player.angle = 0;
+
+    score = 0;
+
+    gameOver = false;
+    gameWon = false;
+    started = true;
+
+    keys = {};
+
+    startMission();
+}
+
+
+// =====================================
+// 4. 벽 충돌 확인 함수
+// =====================================
 
 function isWall(x, y) {
 
@@ -237,8 +289,10 @@ function isWall(x, y) {
     let mapY = Math.floor(y);
 
     if (
-        mapY < 0 || mapY >= MAP.length ||
-        mapX < 0 || mapX >= MAP[0].length
+        mapY < 0 ||
+        mapY >= MAP.length ||
+        mapX < 0 ||
+        mapX >= MAP[0].length
     ) {
         return true;
     }
@@ -246,9 +300,10 @@ function isWall(x, y) {
     return MAP[mapY][mapX] === "#";
 }
 
-// --------------------------------
-// 플레이어 이동 함수
-// --------------------------------
+
+// =====================================
+// 5. 플레이어 이동 함수
+// =====================================
 
 function movePlayer(dt) {
 
@@ -257,26 +312,39 @@ function movePlayer(dt) {
     let dx = 0;
     let dy = 0;
 
-    if (keys["w"]) {
+    // 앞으로 이동
+    if (keys["w"] || keys["arrowup"]) {
+
         dx += Math.cos(player.angle) * speed;
         dy += Math.sin(player.angle) * speed;
+
     }
 
-    if (keys["s"]) {
+    // 뒤로 이동
+    if (keys["s"] || keys["arrowdown"]) {
+
         dx -= Math.cos(player.angle) * speed;
         dy -= Math.sin(player.angle) * speed;
+
     }
 
+    // 왼쪽 이동
     if (keys["a"]) {
+
         dx += Math.cos(player.angle - Math.PI / 2) * speed;
         dy += Math.sin(player.angle - Math.PI / 2) * speed;
+
     }
 
+    // 오른쪽 이동
     if (keys["d"]) {
+
         dx += Math.cos(player.angle + Math.PI / 2) * speed;
         dy += Math.sin(player.angle + Math.PI / 2) * speed;
+
     }
 
+    // 벽 충돌 검사
     if (!isWall(player.x + dx, player.y)) {
         player.x += dx;
     }
@@ -296,14 +364,16 @@ function movePlayer(dt) {
         );
 
         if (distance < 0.55) {
-            player.hp -= 12 * dt;
+            player.hp -= 20 * dt;
         }
+
     }
 }
 
-// --------------------------------
-// 공격 함수
-// --------------------------------
+
+// =====================================
+// 6. 공격 함수
+// =====================================
 
 function shoot() {
 
@@ -328,41 +398,73 @@ function shoot() {
         let distance = Math.hypot(dx, dy);
 
         let angle = Math.atan2(dy, dx);
+
         let difference = Math.atan2(
             Math.sin(angle - player.angle),
             Math.cos(angle - player.angle)
         );
 
+        // 조준 범위 확인
         if (
             Math.abs(difference) < 0.12 &&
             distance < minDistance &&
             distance < 8
         ) {
-            target = enemy;
-            minDistance = distance;
+
+            // 벽 뒤에 있는 적은 공격할 수 없음
+            let blocked = false;
+
+            for (let d = 0.1; d < distance; d += 0.1) {
+
+                let checkX = player.x +
+                    Math.cos(angle) * d;
+
+                let checkY = player.y +
+                    Math.sin(angle) * d;
+
+                if (isWall(checkX, checkY)) {
+                    blocked = true;
+                    break;
+                }
+            }
+
+            if (!blocked) {
+                target = enemy;
+                minDistance = distance;
+            }
+
         }
+
     }
 
+    // 공격 성공
     if (target !== null) {
 
         target.hp -= 1;
 
         if (target.hp <= 0) {
+
             target.alive = false;
             score += 100;
+
         }
+
     }
+
 }
 
-// --------------------------------
-// 3D 벽 그리기 함수
-// --------------------------------
+
+// =====================================
+// 7. 3D 벽 그리기 함수
+// =====================================
 
 function drawWalls() {
 
+    // 천장
     ctx.fillStyle = "#24202a";
     ctx.fillRect(0, 0, W, H / 2);
 
+    // 바닥
     ctx.fillStyle = "#35302c";
     ctx.fillRect(0, H / 2, W, H / 2);
 
@@ -390,10 +492,13 @@ function drawWalls() {
             if (isWall(rx, ry)) {
                 hit = true;
             }
+
         }
 
         let correctedDistance =
-            distance * Math.cos(rayAngle - player.angle);
+            distance * Math.cos(
+                rayAngle - player.angle
+            );
 
         correctedDistance = Math.max(
             0.1,
@@ -423,12 +528,15 @@ function drawWalls() {
         for (let i = x; i < x + strip; i++) {
             depthBuffer[i] = correctedDistance;
         }
+
     }
+
 }
 
-// --------------------------------
-// 적 캐릭터 그리기 함수
-// --------------------------------
+
+// =====================================
+// 8. 적 캐릭터 그리기 함수
+// =====================================
 
 function drawEnemies() {
 
@@ -436,6 +544,7 @@ function drawEnemies() {
         enemy => enemy.alive
     );
 
+    // 먼 적부터 그리기
     visibleEnemies.sort((a, b) => {
 
         let da = Math.hypot(
@@ -449,6 +558,7 @@ function drawEnemies() {
         );
 
         return db - da;
+
     });
 
     for (let enemy of visibleEnemies) {
@@ -465,7 +575,9 @@ function drawEnemies() {
             Math.cos(angle - player.angle)
         );
 
-        if (Math.abs(difference) > FOV / 2) continue;
+        if (Math.abs(difference) > FOV / 2) {
+            continue;
+        }
 
         let screenX =
             W / 2 + (difference / FOV) * W;
@@ -483,10 +595,13 @@ function drawEnemies() {
             Math.min(W - 1, Math.floor(screenX))
         );
 
-        if (depthBuffer[column] < distance) continue;
+        if (depthBuffer[column] < distance) {
+            continue;
+        }
 
-        // 로봇 몸체
+        // 몸체
         ctx.fillStyle = "#8d2929";
+
         ctx.fillRect(
             left + size * 0.2,
             top + size * 0.35,
@@ -494,8 +609,9 @@ function drawEnemies() {
             size * 0.55
         );
 
-        // 로봇 머리
+        // 머리
         ctx.fillStyle = "#b5b5b5";
+
         ctx.fillRect(
             left + size * 0.28,
             top + size * 0.12,
@@ -536,12 +652,15 @@ function drawEnemies() {
             size * 0.15,
             size * 0.15
         );
+
     }
+
 }
 
-// --------------------------------
-// 조준점
-// --------------------------------
+
+// =====================================
+// 9. 조준점 그리기
+// =====================================
 
 function drawCrosshair() {
 
@@ -557,11 +676,13 @@ function drawCrosshair() {
     ctx.lineTo(W / 2, H / 2 + 12);
 
     ctx.stroke();
+
 }
 
-// --------------------------------
-// 게임 상태 확인 함수
-// --------------------------------
+
+// =====================================
+// 10. 게임 상태 확인
+// =====================================
 
 function checkGame() {
 
@@ -570,8 +691,10 @@ function checkGame() {
     ).length;
 
     if (player.hp <= 0) {
+
         gameOver = true;
         return;
+
     }
 
     if (aliveCount === 0) {
@@ -590,19 +713,27 @@ function checkGame() {
             } else {
 
                 gameWon = true;
+
             }
+
         }
+
     }
+
 }
 
-// --------------------------------
-// 화면 출력
-// --------------------------------
+
+// =====================================
+// 11. HUD 표시 함수
+// =====================================
 
 function drawHUD() {
 
     document.getElementById("health").innerText =
-        "HP: " + Math.max(0, Math.floor(player.hp));
+        "HP: " + Math.max(
+            0,
+            Math.floor(player.hp)
+        );
 
     document.getElementById("score").innerText =
         "SCORE: " + score;
@@ -614,7 +745,7 @@ function drawHUD() {
     if (gameOver) {
 
         document.getElementById("message").innerText =
-            "GAME OVER - REFRESH TO RESTART";
+            "GAME OVER - PRESS R TO RESTART";
 
     } else if (gameWon) {
 
@@ -630,12 +761,15 @@ function drawHUD() {
 
         document.getElementById("message").innerText =
             "ROBOTS REMAINING: " + aliveCount;
+
     }
+
 }
 
-// --------------------------------
-// 게임 메인 반복 함수
-// --------------------------------
+
+// =====================================
+// 12. 메인 게임 반복 함수
+// =====================================
 
 let previousTime = performance.now();
 
@@ -657,6 +791,7 @@ function gameLoop() {
         }
 
         checkGame();
+
     }
 
     if (started) {
@@ -688,83 +823,98 @@ function gameLoop() {
             W / 2,
             H / 2 + 35
         );
+
     }
 
     requestAnimationFrame(gameLoop);
+
 }
 
-// --------------------------------
-// 키보드 조작
-// --------------------------------
 
-document.addEventListener("keydown", function(e) {
+// =====================================
+// 13. 키보드 조작
+// =====================================
+
+window.addEventListener("keydown", function(e) {
 
     let key = e.key.toLowerCase();
 
-    if (["w", "a", "s", "d"].includes(key)) {
-        keys[key] = true;
+    // 이동 키
+    if (
+        ["w", "a", "s", "d",
+         "arrowup", "arrowdown",
+         "arrowleft", "arrowright"].includes(key)
+    ) {
         e.preventDefault();
+        keys[key] = true;
     }
+
+    // 좌우 시야 회전
+    if (key === "arrowleft") {
+        player.angle -= 0.08;
+    }
+
+    if (key === "arrowright") {
+        player.angle += 0.08;
+    }
+
+    // 게임 재시작
+    if (key === "r" && (gameOver || gameWon)) {
+        resetGame();
+    }
+
 });
 
-document.addEventListener("keyup", function(e) {
+window.addEventListener("keyup", function(e) {
 
     keys[e.key.toLowerCase()] = false;
+
 });
 
-// --------------------------------
-// 마우스 조작
-// --------------------------------
+window.addEventListener("blur", function() {
+
+    keys = {};
+
+});
+
+
+// =====================================
+// 14. 마우스 공격
+// =====================================
 
 canvas.addEventListener("click", function() {
+
+    canvas.focus();
 
     if (!started) {
 
         started = true;
         startMission();
 
-        if (canvas.requestPointerLock) {
-            canvas.requestPointerLock();
-        }
+        return;
 
-    } else {
+    }
 
-        if (
-            document.pointerLockElement !== canvas &&
-            canvas.requestPointerLock
-        ) {
-            canvas.requestPointerLock();
-        }
-
+    if (!gameOver && !gameWon) {
         shoot();
     }
+
 });
 
-document.addEventListener("mousemove", function(e) {
 
-    if (
-        document.pointerLockElement === canvas &&
-        started &&
-        !gameOver &&
-        !gameWon
-    ) {
+// =====================================
+// 15. 게임 실행
+// =====================================
 
-        player.angle += e.movementX * 0.0025;
-    }
-});
-
-// 게임 실행
 gameLoop();
 
 </script>
+
 </body>
 </html>
 """
 
-# --------------------------------
-# 6. Python 데이터를 JavaScript에 전달
-# --------------------------------
-
+# Python 데이터를 JavaScript로 전달
 mission_json = json.dumps(missions)
 
 game_html = game_html.replace(
@@ -772,6 +922,7 @@ game_html = game_html.replace(
     mission_json
 )
 
+# 게임 화면 출력
 components.html(
     game_html,
     height=650,
@@ -779,5 +930,5 @@ components.html(
 )
 
 st.caption(
-    "RETRO STRIKE | 3 MISSIONS | ROBOT ARCADE GAME"
+    "RETRO STRIKE | 3 MISSIONS | ARCADE FPS"
 )
