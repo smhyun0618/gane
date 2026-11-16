@@ -1,12 +1,7 @@
 
 import streamlit as st
 import streamlit.components.v1 as components
-import random
 import json
-
-# =====================================
-# 1. 기본 설정
-# =====================================
 
 st.set_page_config(
     page_title="RETRO STRIKE",
@@ -17,170 +12,169 @@ st.set_page_config(
 st.markdown("""
 <style>
 .stApp {
-    background-color: #101014;
+    background: #101018;
     color: white;
 }
-h1, h2, h3, p, label {
-    color: white !important;
+h1 {
+    color: #00e5ff;
 }
 </style>
 """, unsafe_allow_html=True)
 
+st.title("🎮 RETRO STRIKE: LAST MISSION")
+st.write("모든 미션을 클리어하고 최종 임무를 완수하세요!")
 
-# =====================================
-# 2. 게임 데이터 (리스트)
-# =====================================
-
-mission_plan = [
-    {"name": "MISSION 1 : TRAINING", "enemy_count": 2},
-    {"name": "MISSION 2 : DARK HALL", "enemy_count": 3},
-    {"name": "MISSION 3 : LAST BATTLE", "enemy_count": 4}
-]
-
-spawn_positions = [
-    [7.5, 1.5],
-    [7.5, 6.5],
-    [5.5, 3.5],
-    [2.5, 6.5]
-]
-
-
-# =====================================
-# 3. 미션 생성 함수
-# =====================================
-
+# 미션 데이터
 def build_missions():
+    return [
+        {
+            "name": "MISSION 01 - TRAINING BASE",
+            "map": [
+                "1111111111",
+                "1000000001",
+                "1020000001",
+                "1000100001",
+                "1000102001",
+                "1000000001",
+                "1000010001",
+                "1000000001",
+                "1000000001",
+                "1111111111"
+            ],
+            "enemies": [[5.5, 2.5], [7.5, 5.5]],
+            "ammo": [[3.5, 2.5], [6.5, 7.5]]
+        },
+        {
+            "name": "MISSION 02 - DARK FACTORY",
+            "map": [
+                "1111111111",
+                "1000000001",
+                "1020102001",
+                "1000100001",
+                "1000000001",
+                "1000200001",
+                "1000100001",
+                "1000000001",
+                "1000000001",
+                "1111111111"
+            ],
+            "enemies": [[5.5, 1.5], [7.5, 3.5], [2.5, 6.5]],
+            "ammo": [[2.5, 2.5], [7.5, 7.5]]
+        },
+        {
+            "name": "MISSION 03 - FINAL BATTLE",
+            "map": [
+                "1111111111",
+                "1000000001",
+                "1020102001",
+                "1000000001",
+                "1000100001",
+                "1000000001",
+                "1020102001",
+                "1000000001",
+                "1000000001",
+                "1111111111"
+            ],
+            "enemies": [
+                [5.5, 1.5],
+                [7.5, 3.5],
+                [2.5, 5.5],
+                [5.5, 7.5]
+            ],
+            "ammo": [[2.5, 2.5], [7.5, 7.5]]
+        }
+    ]
 
-    game_missions = []
 
-    for index, mission in enumerate(mission_plan):
+missions = json.dumps(build_missions())
 
-        if index == 0:
-            difficulty = "EASY"
-        elif index == 1:
-            difficulty = "NORMAL"
-        else:
-            difficulty = "HARD"
-
-        # 적의 위치를 무작위로 선택
-        selected_positions = random.sample(
-            spawn_positions,
-            mission["enemy_count"]
-        )
-
-        enemies = []
-
-        for position in selected_positions:
-
-            enemies.append({
-                "x": position[0],
-                "y": position[1],
-                "hp": 1
-            })
-
-        game_missions.append({
-            "name": mission["name"],
-            "difficulty": difficulty,
-            "enemies": enemies
-        })
-
-    return game_missions
-
-
-# =====================================
-# 4. 게임 제목 및 안내
-# =====================================
-
-st.title("🎮 RETRO STRIKE")
-st.subheader("LAST MISSION")
-
-st.markdown("""
-**RETRO FPS ARCADE GAME**
-
-어두운 기지에 침입한 로봇들을 상대하세요.
-모든 적을 처치하고 최종 미션을 완료하세요!
-""")
-
-st.info("""
-↑ ↓ : 전진 / 후진
-| ← → : 시야 회전
-| W A S D : 이동
-| 마우스 클릭 : 공격
-""")
-
-# =====================================
-# 5. 게임 데이터 전달
-# =====================================
-
-missions = build_missions()
-
-game_html = r"""
+# 게임 화면
+html = r"""
 <!DOCTYPE html>
 <html>
 <head>
-
 <meta charset="UTF-8">
-
 <style>
+* { box-sizing: border-box; }
 
 body {
     margin: 0;
-    padding: 0;
-    background: #090909;
+    background: #080810;
     color: white;
     font-family: monospace;
+    overflow: hidden;
 }
 
-.info {
+#info {
     display: flex;
     justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 8px;
     padding: 12px;
-    background: #151515;
-    color: #00ff99;
+    color: #00e5ff;
     font-size: 16px;
-    border: 1px solid #444;
 }
 
 canvas {
     display: block;
     width: 100%;
     height: auto;
-    background: black;
-    border: 2px solid #555;
-    cursor: crosshair;
+    border: 3px solid #00e5ff;
     outline: none;
+    background: black;
 }
 
 #message {
+    color: #ffdf5d;
     text-align: center;
-    color: #ffcc00;
     font-size: 18px;
-    padding: 12px;
-    background: #151515;
+    min-height: 28px;
+    padding: 8px;
 }
 
+button {
+    background: #00bcd4;
+    color: black;
+    border: none;
+    padding: 10px 18px;
+    margin: 5px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#help {
+    color: #aaa;
+    text-align: center;
+    font-size: 13px;
+    padding: 8px;
+}
 </style>
 </head>
 
 <body>
-
-<div class="info">
-    <span id="mission">MISSION 1</span>
-    <span id="health">HP: 100</span>
-    <span id="score">SCORE: 0</span>
+<div id="info">
+    <span id="mission"></span>
+    <span id="health"></span>
+    <span id="ammo"></span>
+    <span id="score"></span>
+    <span id="enemy-count"></span>
 </div>
 
-<canvas id="game" width="960" height="540" tabindex="0"></canvas>
+<canvas id="game" width="900" height="520" tabindex="0"></canvas>
 
-<div id="message">
-    CLICK TO START
+<div id="message">게임 화면을 클릭하고 시작하세요!</div>
+
+<div style="text-align:center">
+    <button onclick="togglePause()">PAUSE / RESUME</button>
+    <button onclick="restartGame()">RESTART</button>
+</div>
+
+<div id="help">
+WASD: 이동 | ← →: 시야 회전 | SPACE: 사격 | R: 재장전 | P: 일시정지
 </div>
 
 <script>
-
-// =====================================
-// 1. 게임 기본 데이터
-// =====================================
+const missions = __MISSIONS__;
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -188,747 +182,562 @@ const ctx = canvas.getContext("2d");
 const W = canvas.width;
 const H = canvas.height;
 
-const MAP = [
-    "##########",
-    "#........#",
-    "#..#.....#",
-    "#........#",
-    "#....#...#",
-    "#........#",
-    "#..#.....#",
-    "#........#",
-    "##########"
-];
-
-const MISSIONS = __MISSION_DATA__;
-
 let missionIndex = 0;
-
-let player = {
-    x: 1.5,
-    y: 1.5,
-    angle: 0,
-    hp: 100
-};
-
+let player;
 let enemies = [];
-
+let ammoItems = [];
 let score = 0;
-
-let keys = {};
-
-let started = false;
+let paused = false;
 let gameOver = false;
-let gameWon = false;
+let missionClear = false;
+let keys = {};
+let lastTime = 0;
+let attackFlash = 0;
+let message = "";
 
-let lastShot = 0;
-let clearTime = 0;
+const FOV = Math.PI / 2.8;
+const MAX_DISTANCE = 12;
 
-const FOV = Math.PI / 3;
-const depthBuffer = new Array(W).fill(10);
+function startMission(index) {
+    missionIndex = index;
+    const data = missions[index];
 
+    player = {
+        x: 1.5,
+        y: 1.5,
+        angle: 0,
+        hp: 100,
+        ammo: 20,
+        maxAmmo: 20,
+        lastHit: 0
+    };
 
-// =====================================
-// 2. 미션 시작 함수
-// =====================================
+    enemies = data.enemies.map((p, i) => ({
+        x: p[0],
+        y: p[1],
+        hp: 2,
+        alive: true,
+        id: i,
+        attackTimer: 0
+    }));
 
-function startMission() {
+    ammoItems = data.ammo.map(p => ({
+        x: p[0],
+        y: p[1],
+        collected: false
+    }));
 
-    player.x = 1.5;
-    player.y = 1.5;
-    player.angle = 0;
-
-    enemies = MISSIONS[missionIndex].enemies.map(
-        enemy => ({
-            x: enemy.x,
-            y: enemy.y,
-            hp: enemy.hp,
-            alive: true
-        })
-    );
-
-    clearTime = 0;
-
-    document.getElementById("mission").innerText =
-        MISSIONS[missionIndex].name;
-}
-
-
-// =====================================
-// 3. 게임 초기화 함수
-// =====================================
-
-function resetGame() {
-
-    missionIndex = 0;
-
-    player.hp = 100;
-    player.x = 1.5;
-    player.y = 1.5;
-    player.angle = 0;
-
-    score = 0;
-
+    paused = false;
     gameOver = false;
-    gameWon = false;
-    started = true;
-
+    missionClear = false;
     keys = {};
 
-    startMission();
+    message = data.name + " - MISSION START!";
+    updateHUD();
 }
 
-
-// =====================================
-// 4. 벽 충돌 확인 함수
-// =====================================
+function currentMap() {
+    return missions[missionIndex].map;
+}
 
 function isWall(x, y) {
-
-    let mapX = Math.floor(x);
-    let mapY = Math.floor(y);
+    const map = currentMap();
+    const mx = Math.floor(x);
+    const my = Math.floor(y);
 
     if (
-        mapY < 0 ||
-        mapY >= MAP.length ||
-        mapX < 0 ||
-        mapX >= MAP[0].length
-    ) {
-        return true;
-    }
+        my < 0 || my >= map.length ||
+        mx < 0 || mx >= map[0].length
+    ) return true;
 
-    return MAP[mapY][mapX] === "#";
+    return map[my][mx] === "1" ||
+           map[my][mx] === "2";
 }
 
-
-// =====================================
-// 5. 플레이어 이동 함수
-// =====================================
-
 function movePlayer(dt) {
+    if (keys["arrowleft"]) player.angle -= 2.2 * dt;
+    if (keys["arrowright"]) player.angle += 2.2 * dt;
 
     const speed = 2.5 * dt;
+    let forward = 0;
+    let side = 0;
 
-    let dx = 0;
-    let dy = 0;
+    if (keys["w"]) forward += speed;
+    if (keys["s"]) forward -= speed;
+    if (keys["a"]) side -= speed;
+    if (keys["d"]) side += speed;
 
-    // 앞으로 이동
-    if (keys["w"] || keys["arrowup"]) {
+    const dx = Math.cos(player.angle) * forward
+             - Math.sin(player.angle) * side;
+    const dy = Math.sin(player.angle) * forward
+             + Math.cos(player.angle) * side;
 
-        dx += Math.cos(player.angle) * speed;
-        dy += Math.sin(player.angle) * speed;
+    if (!isWall(player.x + dx, player.y)) player.x += dx;
+    if (!isWall(player.x, player.y + dy)) player.y += dy;
 
-    }
+    enemies.forEach(enemy => {
+        if (!enemy.alive) return;
 
-    // 뒤로 이동
-    if (keys["s"] || keys["arrowdown"]) {
-
-        dx -= Math.cos(player.angle) * speed;
-        dy -= Math.sin(player.angle) * speed;
-
-    }
-
-    // 왼쪽 이동
-    if (keys["a"]) {
-
-        dx += Math.cos(player.angle - Math.PI / 2) * speed;
-        dy += Math.sin(player.angle - Math.PI / 2) * speed;
-
-    }
-
-    // 오른쪽 이동
-    if (keys["d"]) {
-
-        dx += Math.cos(player.angle + Math.PI / 2) * speed;
-        dy += Math.sin(player.angle + Math.PI / 2) * speed;
-
-    }
-
-    // 벽 충돌 검사
-    if (!isWall(player.x + dx, player.y)) {
-        player.x += dx;
-    }
-
-    if (!isWall(player.x, player.y + dy)) {
-        player.y += dy;
-    }
-
-    // 적과 가까워지면 체력 감소
-    for (let enemy of enemies) {
-
-        if (!enemy.alive) continue;
-
-        let distance = Math.hypot(
+        const distance = Math.hypot(
             player.x - enemy.x,
             player.y - enemy.y
         );
 
         if (distance < 0.55) {
-            player.hp -= 20 * dt;
+            player.x -= dx * 1.5;
+            player.y -= dy * 1.5;
         }
+    });
 
-    }
+    ammoItems.forEach(item => {
+        if (item.collected) return;
+
+        if (Math.hypot(
+            player.x - item.x,
+            player.y - item.y
+        ) < 0.5) {
+            item.collected = true;
+            player.ammo = Math.min(40, player.ammo + 10);
+            message = "AMMO +10";
+        }
+    });
 }
-
-
-// =====================================
-// 6. 공격 함수
-// =====================================
 
 function shoot() {
+    if (paused || gameOver || missionClear) return;
 
-    if (!started || gameOver || gameWon) return;
+    if (player.ammo <= 0) {
+        message = "NO AMMO! PRESS R TO RELOAD";
+        return;
+    }
 
-    const now = performance.now();
-
-    if (now - lastShot < 300) return;
-
-    lastShot = now;
+    player.ammo--;
+    attackFlash = 0.12;
 
     let target = null;
-    let minDistance = Infinity;
+    let closest = Infinity;
 
-    for (let enemy of enemies) {
+    enemies.forEach(enemy => {
+        if (!enemy.alive) return;
 
-        if (!enemy.alive) continue;
+        const dx = enemy.x - player.x;
+        const dy = enemy.y - player.y;
+        const distance = Math.hypot(dx, dy);
 
-        let dx = enemy.x - player.x;
-        let dy = enemy.y - player.y;
+        let angle = Math.atan2(dy, dx) - player.angle;
+        angle = Math.atan2(Math.sin(angle), Math.cos(angle));
 
-        let distance = Math.hypot(dx, dy);
-
-        let angle = Math.atan2(dy, dx);
-
-        let difference = Math.atan2(
-            Math.sin(angle - player.angle),
-            Math.cos(angle - player.angle)
-        );
-
-        // 조준 범위 확인
-        if (
-            Math.abs(difference) < 0.12 &&
-            distance < minDistance &&
-            distance < 8
-        ) {
-
-            // 벽 뒤에 있는 적은 공격할 수 없음
-            let blocked = false;
-
-            for (let d = 0.1; d < distance; d += 0.1) {
-
-                let checkX = player.x +
-                    Math.cos(angle) * d;
-
-                let checkY = player.y +
-                    Math.sin(angle) * d;
-
-                if (isWall(checkX, checkY)) {
-                    blocked = true;
-                    break;
-                }
-            }
-
-            if (!blocked) {
-                target = enemy;
-                minDistance = distance;
-            }
-
+        if (Math.abs(angle) < 0.16 &&
+            distance < closest &&
+            !rayBlocked(player.x, player.y, enemy.x, enemy.y)) {
+            target = enemy;
+            closest = distance;
         }
+    });
 
-    }
-
-    // 공격 성공
-    if (target !== null) {
-
-        target.hp -= 1;
+    if (target) {
+        target.hp--;
 
         if (target.hp <= 0) {
-
             target.alive = false;
             score += 100;
-
+            message = "ENEMY DEFEATED! +100";
+        } else {
+            message = "HIT!";
         }
-
+    } else {
+        message = "MISS!";
     }
 
+    checkGame();
+    updateHUD();
 }
 
+function reload() {
+    if (paused || gameOver || missionClear) return;
 
-// =====================================
-// 7. 3D 벽 그리기 함수
-// =====================================
+    if (player.ammo < player.maxAmmo) {
+        player.ammo = player.maxAmmo;
+        message = "RELOADED!";
+        updateHUD();
+    }
+}
+
+function rayBlocked(x1, y1, x2, y2) {
+    const distance = Math.hypot(x2 - x1, y2 - y1);
+    const steps = Math.ceil(distance * 15);
+
+    for (let i = 1; i < steps; i++) {
+        const t = i / steps;
+
+        if (isWall(
+            x1 + (x2 - x1) * t,
+            y1 + (y2 - y1) * t
+        )) return true;
+    }
+
+    return false;
+}
 
 function drawWalls() {
+    const columns = 180;
+    const columnWidth = W / columns;
 
-    // 천장
-    ctx.fillStyle = "#24202a";
-    ctx.fillRect(0, 0, W, H / 2);
-
-    // 바닥
-    ctx.fillStyle = "#35302c";
-    ctx.fillRect(0, H / 2, W, H / 2);
-
-    const strip = 4;
-
-    for (let x = 0; x < W; x += strip) {
-
-        let rayAngle =
-            player.angle - FOV / 2 +
-            (x / W) * FOV;
+    for (let i = 0; i < columns; i++) {
+        const cameraAngle =
+            player.angle - FOV / 2 + FOV * (i / columns);
 
         let distance = 0;
         let hit = false;
 
-        while (distance < 12 && !hit) {
-
+        while (distance < MAX_DISTANCE && !hit) {
             distance += 0.025;
 
-            let rx = player.x +
-                Math.cos(rayAngle) * distance;
+            const x = player.x + Math.cos(cameraAngle) * distance;
+            const y = player.y + Math.sin(cameraAngle) * distance;
 
-            let ry = player.y +
-                Math.sin(rayAngle) * distance;
-
-            if (isWall(rx, ry)) {
-                hit = true;
-            }
-
+            if (isWall(x, y)) hit = true;
         }
 
-        let correctedDistance =
-            distance * Math.cos(
-                rayAngle - player.angle
-            );
+        const corrected = distance *
+            Math.cos(cameraAngle - player.angle);
 
-        correctedDistance = Math.max(
-            0.1,
-            correctedDistance
-        );
-
-        let wallHeight = Math.min(
+        const wallHeight = Math.min(
             H,
-            H / correctedDistance
+            H / Math.max(corrected, 0.1)
         );
 
-        let shade = Math.max(
+        const shade = Math.max(
             25,
-            180 - correctedDistance * 18
+            190 - corrected * 18
         );
 
-        ctx.fillStyle =
-            `rgb(${shade}, ${Math.floor(shade * 0.65)}, ${Math.floor(shade * 0.55)})`;
+        const map = currentMap();
+        const mx = Math.floor(
+            player.x + Math.cos(cameraAngle) * distance
+        );
+        const my = Math.floor(
+            player.y + Math.sin(cameraAngle) * distance
+        );
+
+        const wallType = map[my]?.[mx] || "1";
+
+        if (wallType === "2") {
+            ctx.fillStyle = `rgb(${shade},${shade * 0.35},30)`;
+        } else {
+            ctx.fillStyle = `rgb(${shade * 0.25},${shade * 0.75},${shade})`;
+        }
 
         ctx.fillRect(
-            x,
+            i * columnWidth,
             H / 2 - wallHeight / 2,
-            strip,
+            columnWidth + 1,
             wallHeight
         );
-
-        for (let i = x; i < x + strip; i++) {
-            depthBuffer[i] = correctedDistance;
-        }
-
     }
-
 }
 
+function drawFloor() {
+    const gradient = ctx.createLinearGradient(0, H/2, 0, H);
+    gradient.addColorStop(0, "#25252d");
+    gradient.addColorStop(1, "#080810");
 
-// =====================================
-// 8. 적 캐릭터 그리기 함수
-// =====================================
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, H/2, W, H/2);
+}
 
 function drawEnemies() {
+    const visible = enemies
+        .filter(e => e.alive)
+        .map(e => ({
+            ...e,
+            distance: Math.hypot(e.x-player.x, e.y-player.y)
+        }))
+        .sort((a,b) => b.distance-a.distance);
 
-    let visibleEnemies = enemies.filter(
-        enemy => enemy.alive
-    );
+    visible.forEach(enemy => {
+        const dx = enemy.x - player.x;
+        const dy = enemy.y - player.y;
 
-    // 먼 적부터 그리기
-    visibleEnemies.sort((a, b) => {
-
-        let da = Math.hypot(
-            a.x - player.x,
-            a.y - player.y
+        const angle = Math.atan2(dy,dx)-player.angle;
+        const normalized = Math.atan2(
+            Math.sin(angle),
+            Math.cos(angle)
         );
 
-        let db = Math.hypot(
-            b.x - player.x,
-            b.y - player.y
+        if (Math.abs(normalized) > FOV/2 + 0.2) return;
+
+        const screenX = W/2 + normalized/FOV*W;
+        const size = Math.min(
+            300,
+            H / Math.max(enemy.distance,0.3)
         );
 
-        return db - da;
+        const screenY = H/2-size/2;
 
+        if (rayBlocked(player.x,player.y,enemy.x,enemy.y)) return;
+
+        ctx.fillStyle = "#1b1b1b";
+        ctx.fillRect(screenX-size/2,screenY,size,size);
+
+        ctx.fillStyle = "#d52c37";
+        ctx.fillRect(screenX-size*0.3,screenY+size*0.18,size*0.6,size*0.35);
+
+        ctx.fillStyle = "#ffeb3b";
+        ctx.fillRect(screenX-size*0.22,screenY+size*0.28,size*0.12,size*0.08);
+        ctx.fillRect(screenX+size*0.10,screenY+size*0.28,size*0.12,size*0.08);
+
+        ctx.fillStyle = "#555";
+        ctx.fillRect(screenX-size*0.35,screenY+size*0.55,size*0.7,size*0.35);
     });
-
-    for (let enemy of visibleEnemies) {
-
-        let dx = enemy.x - player.x;
-        let dy = enemy.y - player.y;
-
-        let distance = Math.hypot(dx, dy);
-
-        let angle = Math.atan2(dy, dx);
-
-        let difference = Math.atan2(
-            Math.sin(angle - player.angle),
-            Math.cos(angle - player.angle)
-        );
-
-        if (Math.abs(difference) > FOV / 2) {
-            continue;
-        }
-
-        let screenX =
-            W / 2 + (difference / FOV) * W;
-
-        let size = Math.min(
-            250,
-            H / distance * 0.7
-        );
-
-        let left = screenX - size / 2;
-        let top = H / 2 - size / 2;
-
-        let column = Math.max(
-            0,
-            Math.min(W - 1, Math.floor(screenX))
-        );
-
-        if (depthBuffer[column] < distance) {
-            continue;
-        }
-
-        // 몸체
-        ctx.fillStyle = "#8d2929";
-
-        ctx.fillRect(
-            left + size * 0.2,
-            top + size * 0.35,
-            size * 0.6,
-            size * 0.55
-        );
-
-        // 머리
-        ctx.fillStyle = "#b5b5b5";
-
-        ctx.fillRect(
-            left + size * 0.28,
-            top + size * 0.12,
-            size * 0.44,
-            size * 0.3
-        );
-
-        // 눈
-        ctx.fillStyle = "#ff3333";
-
-        ctx.fillRect(
-            left + size * 0.36,
-            top + size * 0.23,
-            size * 0.1,
-            size * 0.06
-        );
-
-        ctx.fillRect(
-            left + size * 0.55,
-            top + size * 0.23,
-            size * 0.1,
-            size * 0.06
-        );
-
-        // 다리
-        ctx.fillStyle = "#444";
-
-        ctx.fillRect(
-            left + size * 0.28,
-            top + size * 0.85,
-            size * 0.15,
-            size * 0.15
-        );
-
-        ctx.fillRect(
-            left + size * 0.57,
-            top + size * 0.85,
-            size * 0.15,
-            size * 0.15
-        );
-
-    }
-
 }
 
+function drawAmmo() {
+    ammoItems.forEach(item => {
+        if (item.collected) return;
 
-// =====================================
-// 9. 조준점 그리기
-// =====================================
+        const dx = item.x-player.x;
+        const dy = item.y-player.y;
+        const angle = Math.atan2(dy,dx)-player.angle;
+        const normalized = Math.atan2(Math.sin(angle),Math.cos(angle));
+
+        if (Math.abs(normalized)>FOV/2) return;
+
+        const distance = Math.hypot(dx,dy);
+        if (rayBlocked(player.x,player.y,item.x,item.y)) return;
+
+        const x = W/2 + normalized/FOV*W;
+        const size = Math.min(35,H/distance*0.12);
+
+        ctx.fillStyle = "#00ff77";
+        ctx.fillRect(x-size/2,H/2-size/2,size,size);
+    });
+}
 
 function drawCrosshair() {
-
-    ctx.strokeStyle = "#00ff99";
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = attackFlash > 0 ? "#ffdf5d" : "white";
+    ctx.lineWidth = 3;
 
     ctx.beginPath();
-
-    ctx.moveTo(W / 2 - 12, H / 2);
-    ctx.lineTo(W / 2 + 12, H / 2);
-
-    ctx.moveTo(W / 2, H / 2 - 12);
-    ctx.lineTo(W / 2, H / 2 + 12);
-
+    ctx.moveTo(W/2-12,H/2);
+    ctx.lineTo(W/2+12,H/2);
+    ctx.moveTo(W/2,H/2-12);
+    ctx.lineTo(W/2,H/2+12);
     ctx.stroke();
-
 }
 
+function drawWeapon() {
+    ctx.fillStyle = "#333";
+    ctx.fillRect(W/2-55,H-105,110,105);
 
-// =====================================
-// 10. 게임 상태 확인
-// =====================================
+    ctx.fillStyle = "#777";
+    ctx.fillRect(W/2-30,H-130,60,70);
+
+    ctx.fillStyle = "#00e5ff";
+    ctx.fillRect(W/2-8,H-135,16,20);
+}
+
+function drawMiniMap() {
+    const map = currentMap();
+    const scale = 10;
+    const x0 = W-125;
+    const y0 = 15;
+
+    ctx.fillStyle = "rgba(0,0,0,0.7)";
+    ctx.fillRect(x0-5,y0-5,110,110);
+
+    map.forEach((row,y) => {
+        [...row].forEach((cell,x) => {
+            ctx.fillStyle = cell === "1" ? "#00aabb" :
+                            cell === "2" ? "#aa7733" : "#222";
+
+            ctx.fillRect(x0+x*scale,y0+y*scale,scale-1,scale-1);
+        });
+    });
+
+    enemies.forEach(enemy => {
+        if (!enemy.alive) return;
+
+        ctx.fillStyle = "#ff3333";
+        ctx.fillRect(
+            x0+enemy.x*scale-2,
+            y0+enemy.y*scale-2,
+            5,5
+        );
+    });
+
+    ctx.fillStyle = "#ffff00";
+    ctx.beginPath();
+    ctx.arc(
+        x0+player.x*scale,
+        y0+player.y*scale,
+        4,0,Math.PI*2
+    );
+    ctx.fill();
+}
+
+function draw() {
+    ctx.fillStyle = "#111";
+    ctx.fillRect(0,0,W,H/2);
+
+    drawFloor();
+    drawWalls();
+    drawAmmo();
+    drawEnemies();
+    drawWeapon();
+    drawCrosshair();
+    drawMiniMap();
+
+    if (attackFlash > 0) {
+        ctx.fillStyle = "rgba(255,220,80,0.3)";
+        ctx.fillRect(0,0,W,H);
+    }
+
+    if (paused || gameOver || missionClear) {
+        ctx.fillStyle = "rgba(0,0,0,0.75)";
+        ctx.fillRect(0,0,W,H);
+
+        ctx.textAlign = "center";
+        ctx.font = "bold 42px monospace";
+        ctx.fillStyle = gameOver ? "#ff4444" : "#00e5ff";
+
+        ctx.fillText(
+            gameOver ? "GAME OVER" :
+            missionClear ? "MISSION CLEAR!" :
+            "PAUSED",
+            W/2,H/2
+        );
+    }
+}
 
 function checkGame() {
-
-    let aliveCount = enemies.filter(
-        enemy => enemy.alive
-    ).length;
-
     if (player.hp <= 0) {
-
         gameOver = true;
+        message = "GAME OVER - PRESS RESTART";
         return;
-
     }
 
-    if (aliveCount === 0) {
+    if (enemies.every(e => !e.alive)) {
+        missionClear = true;
 
-        if (clearTime === 0) {
-            clearTime = performance.now();
+        if (missionIndex === missions.length-1) {
+            message = "ALL MISSIONS COMPLETE! FINAL SCORE: " + score;
+        } else {
+            message = "MISSION CLEAR! PRESS ENTER FOR NEXT MISSION";
         }
-
-        if (performance.now() - clearTime > 1500) {
-
-            if (missionIndex < MISSIONS.length - 1) {
-
-                missionIndex++;
-                startMission();
-
-            } else {
-
-                gameWon = true;
-
-            }
-
-        }
-
     }
-
 }
 
+function updateHUD() {
+    document.getElementById("mission").textContent =
+        missions[missionIndex].name;
 
-// =====================================
-// 11. HUD 표시 함수
-// =====================================
+    document.getElementById("health").textContent =
+        "HP: " + player.hp;
 
-function drawHUD() {
+    document.getElementById("ammo").textContent =
+        "AMMO: " + player.ammo;
 
-    document.getElementById("health").innerText =
-        "HP: " + Math.max(
-            0,
-            Math.floor(player.hp)
-        );
-
-    document.getElementById("score").innerText =
+    document.getElementById("score").textContent =
         "SCORE: " + score;
 
-    let aliveCount = enemies.filter(
-        enemy => enemy.alive
-    ).length;
+    document.getElementById("enemy-count").textContent =
+        "ENEMIES: " + enemies.filter(e=>e.alive).length;
 
-    if (gameOver) {
-
-        document.getElementById("message").innerText =
-            "GAME OVER - PRESS R TO RESTART";
-
-    } else if (gameWon) {
-
-        document.getElementById("message").innerText =
-            "MISSION COMPLETE! FINAL SCORE: " + score;
-
-    } else if (clearTime > 0) {
-
-        document.getElementById("message").innerText =
-            "MISSION CLEAR!";
-
-    } else {
-
-        document.getElementById("message").innerText =
-            "ROBOTS REMAINING: " + aliveCount;
-
-    }
-
+    document.getElementById("message").textContent = message;
 }
 
+function togglePause() {
+    if (gameOver || missionClear) return;
+    paused = !paused;
+    message = paused ? "PAUSED" : "MISSION IN PROGRESS";
+    updateHUD();
+}
 
-// =====================================
-// 12. 메인 게임 반복 함수
-// =====================================
+function restartGame() {
+    score = 0;
+    startMission(0);
+    canvas.focus();
+}
 
-let previousTime = performance.now();
+function gameLoop(timestamp) {
+    const dt = Math.min((timestamp-lastTime)/1000 || 0,0.04);
+    lastTime = timestamp;
 
-function gameLoop() {
+    if (!paused && !gameOver && !missionClear) {
+        movePlayer(dt);
 
-    const now = performance.now();
+        enemies.forEach(enemy => {
+            if (!enemy.alive) return;
 
-    let dt = Math.min(
-        (now - previousTime) / 1000,
-        0.05
-    );
+            enemy.attackTimer += dt;
 
-    previousTime = now;
+            const distance = Math.hypot(
+                enemy.x-player.x,
+                enemy.y-player.y
+            );
 
-    if (started && !gameOver && !gameWon) {
+            if (distance < 4 && enemy.attackTimer > 1.2) {
+                if (!rayBlocked(player.x,player.y,enemy.x,enemy.y)) {
+                    player.hp -= 5;
+                    enemy.attackTimer = 0;
+                    message = "WARNING! ENEMY ATTACK!";
+                }
+            }
+        });
 
-        if (clearTime === 0) {
-            movePlayer(dt);
-        }
-
+        attackFlash = Math.max(0,attackFlash-dt);
         checkGame();
-
+        updateHUD();
     }
 
-    if (started) {
-
-        drawWalls();
-        drawEnemies();
-        drawCrosshair();
-        drawHUD();
-
-    } else {
-
-        ctx.fillStyle = "#111";
-        ctx.fillRect(0, 0, W, H);
-
-        ctx.fillStyle = "#00ff99";
-        ctx.font = "bold 36px monospace";
-        ctx.textAlign = "center";
-
-        ctx.fillText(
-            "RETRO STRIKE",
-            W / 2,
-            H / 2 - 20
-        );
-
-        ctx.font = "20px monospace";
-
-        ctx.fillText(
-            "CLICK TO START",
-            W / 2,
-            H / 2 + 35
-        );
-
-    }
-
+    draw();
     requestAnimationFrame(gameLoop);
-
 }
 
+// 키보드 조작
+document.addEventListener("keydown",function(e) {
+    const key = e.key.toLowerCase();
 
-// =====================================
-// 13. 키보드 조작
-// =====================================
-
-window.addEventListener("keydown", function(e) {
-
-    let key = e.key.toLowerCase();
-
-    // 이동 키
-    if (
-        ["w", "a", "s", "d",
-         "arrowup", "arrowdown",
-         "arrowleft", "arrowright"].includes(key)
-    ) {
+    if (["w","a","s","d","arrowleft","arrowright"," "].includes(key)) {
         e.preventDefault();
+    }
+
+    if (key === " " && !keys[" "]) {
+        shoot();
+        keys[" "] = true;
+    } else if (key === "p" && !e.repeat) {
+        togglePause();
+    } else if (key === "r" && !e.repeat) {
+        reload();
+    } else if (key === "enter" && missionClear &&
+               missionIndex < missions.length-1) {
+        startMission(missionIndex+1);
+    } else {
         keys[key] = true;
     }
-
-    // 좌우 시야 회전
-    if (key === "arrowleft") {
-        player.angle -= 0.08;
-    }
-
-    if (key === "arrowright") {
-        player.angle += 0.08;
-    }
-
-    // 게임 재시작
-    if (key === "r" && (gameOver || gameWon)) {
-        resetGame();
-    }
-
 });
 
-window.addEventListener("keyup", function(e) {
-
+document.addEventListener("keyup",function(e) {
     keys[e.key.toLowerCase()] = false;
-
 });
 
-window.addEventListener("blur", function() {
-
-    keys = {};
-
-});
-
-
-// =====================================
-// 14. 마우스 공격
-// =====================================
-
-canvas.addEventListener("click", function() {
-
+canvas.addEventListener("click",function() {
     canvas.focus();
-
-    if (!started) {
-
-        started = true;
-        startMission();
-
-        return;
-
-    }
-
-    if (!gameOver && !gameWon) {
-        shoot();
-    }
-
 });
 
-
-// =====================================
-// 15. 게임 실행
-// =====================================
-
-gameLoop();
+startMission(0);
+requestAnimationFrame(gameLoop);
 
 </script>
-
 </body>
 </html>
 """
 
-# Python 데이터를 JavaScript로 전달
-mission_json = json.dumps(missions)
+html = html.replace("__MISSIONS__", missions)
 
-game_html = game_html.replace(
-    "__MISSION_DATA__",
-    mission_json
-)
-
-# 게임 화면 출력
 components.html(
-    game_html,
-    height=650,
+    html,
+    height=680,
     scrolling=False
-)
-
-st.caption(
-    "RETRO STRIKE | 3 MISSIONS | ARCADE FPS"
 )
